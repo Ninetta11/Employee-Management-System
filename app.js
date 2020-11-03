@@ -1,5 +1,7 @@
 const mysql = require("mysql");
 const inquirer = require("inquirer");
+const cTable = require("console.table");
+
 
 // creates connection with database
 var connection = mysql.createConnection({
@@ -75,7 +77,11 @@ function start() {
 
 // displays all employees 
 function viewAllEmployees() {
-    // required
+    connection.query("SELECT * FROM employee", function (err, res) {
+        if (err) throw err;
+        console.log("All Employees");
+        console.table(["ID", "First Name", "Surname", "Role", "Manager"], res);
+    })
 }
 
 // displays employees by department
