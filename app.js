@@ -171,18 +171,21 @@ function viewEmployeesByManager() {
 function addEmployee() {
     let employees = ["No Manager"];
     let roles = ["Add New Role"];
+    // queries all existing employees from database to pre-fill manager selection
     connection.query(`SELECT employee.first_name, employee.last_name FROM employee`, function (err, res) {
         if (err) throw err;
         for (var i = 0; i < res.length; i++) {
             employees.push(res[i].first_name + " " + res[i].last_name);
         }
     });
+    // queries all existing roles from database to pre-fill role selection
     connection.query(`SELECT role.title FROM role`, function (err, res) {
         if (err) throw err;
         for (var i = 0; i < res.length; i++) {
             roles.push(res[i].title);
         }
     });
+    // queries user for new employee information
     inquirer.prompt([
         {
             type: "input",
@@ -276,7 +279,7 @@ function updateEmployeeManager() {
 
 // enables user to add a role
 function addRole() {
-
+    let role = "";
     inquirer.prompt([
         {
             type: "input",
@@ -284,77 +287,105 @@ function addRole() {
             message: "Enter the title of the role you would like to add"
         }
     ]).then(function (response) {
-        let existingRoles = getRoles();
-        console.log(existingRoles);
-        let role = response.role;
-        if (existingRoles === role) {
-            console.log("This role already exists");
-        }
-        else {
-            let department = ["Add New Department"];
-            connection.query(`SELECT department.name FROM department`, function (err, res) {
-                if (err) throw err;
-                for (var i = 0; i < res.length; i++) {
-                    department.push(res[i].name);
-                }
-            });
-            inquirer.prompt([
-                {
-                    type: "input",
-                    name: "salary",
-                    message: "What is the annual salary of this role?",
-                    // The users input must be numeric
-                    validate: val => /^\d+$/.test(val)
-                },
-                {
-                    type: "list",
-                    message: "Select the Department for this role",
-                    name: "department",
-                    choices: department
-                }
-            ]).then(function (response) {
-                // department Id doesnt work
-                let departmentId = "";
-                connection.query(`SELECT id FROM department WHERE department.name = "${response.department}"`,
-                    function (err, res) {
-                        if (err) throw err;
-                        departmentId = res;
-                    });
-                connection.query(
-                    "INSERT INTO role SET ?",
+        connection.query('SELECT role.title FROM role', function (err, res) {
+            if (err) throw err;
+            if (res.some((role) => role.title === response.role)) {
+                console.log("\nThis role already exists\n");
+                start();
+            }
+            else {
+                role = response.role;
+                let department = ["Add New Department"];
+                connection.query(`SELECT department.name FROM department`, function (err, res) {
+                    if (err) throw err;
+                    for (var i = 0; i < res.length; i++) {
+                        department.push(res[i].name);
+                    }
+                });
+                inquirer.prompt([
                     {
-                        title: role,
-                        salary: response.salary,
-                        department_id: departmentId
+                        type: "input",
+                        name: "salary",
+                        message: "What is the annual salary of this Role?",
+                        // The users input must be numeric
+                        validate: val => /^\d+$/.test(val)
                     },
-                    function (err, res) {
-                        if (err) throw err;
-                        console.log("New Role added:" + res.affectedRows + "\n");
-                        start();
-                    })
-            })
-        }
-    })
-}
-
-// returns list of current roles in database
-function getRoles() {
-    connection.query('SELECT role.title FROM role', function (err, res) {
-        if (err) throw err;
-        return res;
+                    {
+                        type: "list",
+                        message: "Select the Department for this role",
+                        name: "department",
+                        choices: department
+                    }
+                ]).then(function (response) {
+                    if (response.department === "Add New Department") {
+                        console.log("Please add new Department prior to adding new role");
+                        addDepartment();
+                    }
+                    else {
+                        connection.query(`SELECT id FROM department WHERE department.name = "${response.department}"`,
+                            function (err, res) {
+                                if (err) throw err;
+                                connection.query(
+                                    "INSERT INTO role SET ?",
+                                    {
+                                        title: role,
+                                        salary: response.salary,
+                                        department_id: res.id
+                                    },
+                                    function (err, res) {
+                                        if (err) throw err;
+                                        console.log("New Role added\n");
+                                        start();
+                                    })
+                            });
+                    }
+                })
+            }
+        })
     })
 }
 
 // enables user to add a department
 function addDepartment() {
-    // required
+    // asks user for name of new department
+    inquirer.prompt([
+        {
+            type: "input",
+            name: "department",
+            message: "Enter the name of the department you would like to add"
+        }
+    ]).then(function (response) {
+        // checks if department already exists
+        connection.query('SELECT department.name FROM department', function (err, res) {
+            if (err) throw err;
+            // if department already exists, alerts user and ceases function
+            if (res.some((department) => department.name === response.department)) {
+                console.log("\nThis department already exists\n");
+                start();
+            }
+            else {
+                // adds department to database
+                connection.query(
+                    "INSERT INTO department SET ?",
+                    {
+                        name: response,
+                    },
+                    function (err, res) {
+                        if (err) throw err;
+                        console.log("New Department added\n");
+                        start();
+                    })
+            }
+        })
+    })
 }
 
+// ceases program
 function quit() {
-
+    connection.end();
 }
 
-
+// initiates program
 function init() {
     // renders app title
     console.log(logo(config).render());
