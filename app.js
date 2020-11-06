@@ -261,20 +261,154 @@ function addEmployeeToDatabase(firstname, surname, roleId, managerId) {
 
 // enables user to delete an employee 
 function removeEmployee() {
-
+    let allEmployees = [];
+    let employeeNames = [];
+    // queries all existing employees from database to pre-fill employee selection
+    connection.query(`SELECT employee.id, employee.first_name, employee.last_name FROM employee`, function (err, res) {
+        if (err) throw err;
+        allEmployees = res;
+        for (var i = 0; i < res.length; i++) {
+            employeeNames.push(res[i].first_name + " " + res[i].last_name);
+        }
+        // asks user to select employee they wish to delete
+        inquirer.prompt([
+            {
+                type: "list",
+                message: "Which employee would you like to delete?",
+                name: "selection",
+                choices: employeeNames
+            }
+        ]).then(function (response) {
+            // asks user to confirm they wish to delete selected employee
+            let selectedEmployee = response.selection.split(" ");
+            let deleteEmployee = allEmployees.find(employee => employee.first_name === selectedEmployee[0] && employee.last_name === selectedEmployee[1]);
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: `Are you sure you want to delete ${response.selection}? This will remove \n ${JSON.stringify(deleteEmployee)} \nfrom the records permanently.`,
+                    name: "delete",
+                    choices: ["Yes", "No"]
+                }
+            ]).then(function (response) {
+                // deletes selected employee from database
+                if (response.delete === "Yes") {
+                    connection.query(`DELETE FROM employee WHERE employee.id = "${deleteEmployee.id}"`, function (err, res) {
+                        if (err) throw err;
+                        console.log(`\n${deleteEmployee.first_name} ${deleteEmployee.last_name} has been deleted from the records\n`)
+                        start();
+                    })
+                } else {
+                    console.log("\nNo records have been deleted\n")
+                }
+            })
+        })
+    });
 }
 
 // enables user to update an employee role
 function updateEmployeeRole() {
-    // required
+    let allEmployees = [];
+    let employeeNames = [];
+    // queries all existing employees from database to pre-fill employee selection
+    connection.query
+        ("SELECT employee.id, employee.first_name, employee.last_name FROM employee", function (err, res) {
+            if (err) throw err;
+            allEmployees = res;
+            for (var i = 0; i < res.length; i++) {
+                employeeNames.push(res[i].first_name + " " + res[i].last_name);
+            }
+            // asks user to select employee they wish to delete
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "Which employee would you like to update?",
+                    name: "employee",
+                    choices: employeeNames
+                }
+            ]).then(function (response) {
+                // asks user to select role they wish to update the employee to
+                let roleNames = ["Add New Role"];
+                connection.query("SELECT role.id, role.title FROM role", function (err, res) {
+                    if (err) throw err;
+                    let roles = res;
+                    for (var i = 0; i < res.length; i++) {
+                        roleNames.push(res[i].title);;
+                    }
+                    let selectedEmployee = response.employee.split(" ");
+                    let updateEmployee = allEmployees.find(employee => employee.first_name === selectedEmployee[0] && employee.last_name === selectedEmployee[1]);
+                    inquirer.prompt([
+                        {
+                            type: "list",
+                            message: `Which role would you like to update ${selectedEmployee[0]} ${selectedEmployee[1]} to?`,
+                            name: "role",
+                            choices: roleNames
+                        }
+                    ]).then(function (response) {
+                        if (response.role === "Add New Role") {
+                            addRole();
+                        }
+                        else {
+                            // updates role to database
+                            let newRole = roles.find(role => role.title === response.role);
+                            connection.query(`UPDATE employee SET employee.role_id = "${newRole.id}" WHERE employee.id = "${updateEmployee.id}"`, function (err, res) {
+                                if (err) throw err;
+                                console.log("\nEmployee role successfully updated\n");
+                                start();
 
-    // select all employees, and all roles
-    // inquirier prompt asking user to select employee, and then select which role they would like to update to with addNewROle as an option
+                            })
+                        }
+                    })
+                })
+            })
+        })
 }
+
 
 // enables user to update an employee manager
 function updateEmployeeManager() {
-
+    let allEmployees = [];
+    let employeeNames = [];
+    // queries all existing employees from database to pre-fill employee selection
+    connection.query
+        ("SELECT employee.id, employee.first_name, employee.last_name FROM employee", function (err, res) {
+            if (err) throw err;
+            allEmployees = res;
+            for (var i = 0; i < res.length; i++) {
+                employeeNames.push(res[i].first_name + " " + res[i].last_name);
+            }
+            // asks user to select employee they wish to update
+            inquirer.prompt([
+                {
+                    type: "list",
+                    message: "Which employee would you like to update the manager for?",
+                    name: "employee",
+                    choices: employeeNames
+                }
+            ]).then(function (response) {
+                let selectedEmployee = response.employee.split(" ");
+                let employee = allEmployees.find(employee => employee.first_name === selectedEmployee[0] && employee.last_name === selectedEmployee[1]);
+                let index = employeeNames.indexOf(response.employee);
+                index > -1 ? employeeNames.splice(index, 1) : false;
+                // asks user to select the employee they wish to update as the manager
+                inquirer.prompt([
+                    {
+                        type: "list",
+                        message: `Whom is ${selectedEmployee[0]} ${selectedEmployee[1]} new manager?`,
+                        name: "manager",
+                        choices: employeeNames
+                    }
+                ]).then(function (response) {
+                    let selectedManager = response.manager.split(" ");
+                    // updates manager to database
+                    let newManager = allEmployees.find(employee => employee.first_name === selectedManager[0] && employee.last_name === selectedManager[1]);
+                    connection.query(`UPDATE employee SET employee.manager_id = "${newManager.id}" WHERE employee.id = "${employee.id}"`, function (err, res) {
+                        if (err) throw err;
+                        console.log("\nEmployee manager successfully updated\n");
+                        start();
+                    })
+                })
+            })
+        })
 }
 
 // enables user to add a role
