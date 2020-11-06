@@ -16,6 +16,7 @@
   *Delete Employees
   
   ## Demonstration
+![ems gif demo](https://user-images.githubusercontent.com/65838273/98313949-1865ba00-2029-11eb-99b8-bdb9bdded257.gif)
 
   ## Table of Contents
   1. [Installation](#installation)
