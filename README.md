@@ -4,7 +4,18 @@
   ![APACHE](https://img.shields.io/badge/license-APACHE-green)
 
   ## Description
-  This Employee Management System is a content management system that allows the user to interact with information stored in a database. The Employee Management System allows users to  *View all Employees *View Employees by Department *View Employees by Manager *Add New Employees *Add New Roles *Add New Dpeartments *Update Employee Managers *Update Employee Roles *Delete Employees
+  This Employee Management System is a content management system that allows the user to interact with information stored in a database. The Employee Management System allows users to  
+  *View all Employees 
+  *View Employees by Department 
+  *View Employees by Manager
+  *Add New Employees 
+  *Add New Roles 
+  *Add New Dpeartments 
+  *Update Employee Managers 
+  *Update Employee Roles 
+  *Delete Employees
+  
+  ## Demonstration
 
   ## Table of Contents
   1. [Installation](#installation)
