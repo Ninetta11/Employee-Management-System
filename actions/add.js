@@ -190,7 +190,6 @@ const department = () => {
                 index.start();
             }
             else {
-                console.log(response.department);
                 // adds department to database
                 connection.query(
                     "INSERT INTO department SET ?",
@@ -199,7 +198,7 @@ const department = () => {
                     },
                     function (err, res) {
                         if (err) throw err;
-                        console.log("New Department added\n");
+                        console.log("\nNew Department added\n");
                         index.start();
                     })
             }

@@ -31,7 +31,7 @@
   npm init, npm i inquirer, npm i mysql, npm i console.table, npm i asciiart-logo
 
   ## Usage
-  
+  For security purposes, a password has not been entered for MySQL within connection.js, please enter prior to executing the code. 
 
   ## License 
   This project is licensed under the APACHE license.
